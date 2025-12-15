@@ -7,6 +7,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Scanner;
 import main.resources.AccessLog;
 import main.resources.Bill;
 
@@ -17,7 +18,18 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         //add a scanner to capture inputs until "stop" is input
-        System.out.println(createBill("src\\main\\resources\\Logs.txt"));
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter path to log file, enter stop when finished:");
+
+        while (scanner.hasNext()) {
+            String input = scanner.next();
+            if (input.equalsIgnoreCase("stop")) {
+                scanner.close();
+                break;
+            } else {
+                System.out.println(createBill(input));
+            }
+        }
     }
 
     //take the path to the log file
@@ -50,7 +62,7 @@ public class App {
             while ((currentLine = br.readLine()) != null) {
             Boolean containsStart = false, containsEnd = false;
             String userName = "";
-            LocalTime time = LocalTime.MIN;
+            LocalTime time = LocalTime.MAX;
 
             if (currentLine.contains("Start") || currentLine.contains("End")) {
                 var strings = currentLine.split(" ");
@@ -66,12 +78,18 @@ public class App {
                 } 
             }
             }
-            if (!userName.isEmpty() && time != null && (containsStart || containsEnd)) {
+            if (!userName.isEmpty() && time != LocalTime.MAX && (containsStart || containsEnd)) {
                 logList.add(new AccessLog(containsStart, containsEnd, userName, time));
             }
         }
         } catch (Exception e) {
             System.out.println("An error occured while processing the file. The error was: " + e);
+            return "";
+        }
+
+        if (logList.isEmpty()) {
+            System.out.println("No complete log lines found.");
+            return "";
         }
 
         LocalTime first = logList.getFirst().time;
