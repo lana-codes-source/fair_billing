@@ -4,10 +4,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.time.LocalTime;
 import static java.time.temporal.ChronoUnit.SECONDS;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Scanner;
 import main.resources.AccessLog;
 import main.resources.Bill;
 
@@ -18,7 +18,18 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         //add a scanner to capture inputs until "stop" is input
-        System.out.println(createBill("fair_billing\\src\\main\\resources\\logs.txt"));
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter path to log file, enter stop when finished:");
+
+        while (scanner.hasNext()) {
+            String input = scanner.next();
+            if (input.equalsIgnoreCase("stop")) {
+                scanner.close();
+                break;
+            } else {
+                System.out.println(createBill(input));
+            }
+        }
     }
 
     //take the path to the log file
@@ -29,9 +40,9 @@ public class App {
     //ignore if timestamp and user is not there (ignore if no time, user or start/end)
     //create bill for each user
     //if user exists update counts
-    private static String createBill(String path) {
+    public static String createBill(String path) {
         
-        ArrayList<Bill> bill = new ArrayList<>();
+        StringBuilder bill = new StringBuilder();
         HashMap<String, Bill> usersAndBill = new HashMap<>();
         LinkedList<AccessLog> logList = new LinkedList<>();
         FileReader file;
@@ -51,7 +62,7 @@ public class App {
             while ((currentLine = br.readLine()) != null) {
             Boolean containsStart = false, containsEnd = false;
             String userName = "";
-            LocalTime time = LocalTime.MIN;
+            LocalTime time = LocalTime.MAX;
 
             if (currentLine.contains("Start") || currentLine.contains("End")) {
                 var strings = currentLine.split(" ");
@@ -67,12 +78,18 @@ public class App {
                 } 
             }
             }
-            if (!userName.isEmpty() && time != null && (containsStart || containsEnd)) {
+            if (!userName.isEmpty() && time != LocalTime.MAX && (containsStart || containsEnd)) {
                 logList.add(new AccessLog(containsStart, containsEnd, userName, time));
             }
         }
         } catch (Exception e) {
             System.out.println("An error occured while processing the file. The error was: " + e);
+            return "";
+        }
+
+        if (logList.isEmpty()) {
+            System.out.println("No complete log lines found.");
+            return "";
         }
 
         LocalTime first = logList.getFirst().time;
@@ -91,7 +108,7 @@ public class App {
                 AccessLog endLog = new AccessLog();
                 logCopy.remove(log);
 
-                for ( AccessLog l : logList ) {
+                for ( AccessLog l : logCopy ) {
                     if ( l.end && l.user.equals(log.user) && l.time.isAfter(log.time) ) {
                         duration = Math.toIntExact(SECONDS.between(log.time, l.time));
                         endLog = l;
@@ -113,8 +130,6 @@ public class App {
             }
         }
 
-        System.out.print(logCopy.size());
-
         //end time log, only happens if start time was in previous log file.
         for ( AccessLog l : logCopy ) {
             if (!!l.end) {
@@ -129,7 +144,8 @@ public class App {
 
         //put together complete bill
         for ( Bill values : usersAndBill.values()) {
-            bill.add(values);
+            bill.append(values).append("\n");
+
         }
 
         return bill.toString();

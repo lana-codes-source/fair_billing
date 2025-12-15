@@ -11,6 +11,12 @@ public class Bill {
         minimumDuration = dur;
     }
 
+    public Bill(String u, int c, int dur) {
+        user = u;
+        sessionCount = c;
+        minimumDuration = dur;
+    }
+
     public Bill Add(int dur) {
         this.minimumDuration += dur;
         this.sessionCount ++;
