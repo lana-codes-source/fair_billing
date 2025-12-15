@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.time.LocalTime;
 import static java.time.temporal.ChronoUnit.SECONDS;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -18,7 +17,7 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         //add a scanner to capture inputs until "stop" is input
-        System.out.println(createBill("fair_billing\\src\\main\\resources\\logs.txt"));
+        System.out.println(createBill("src\\main\\resources\\Logs.txt"));
     }
 
     //take the path to the log file
@@ -29,9 +28,9 @@ public class App {
     //ignore if timestamp and user is not there (ignore if no time, user or start/end)
     //create bill for each user
     //if user exists update counts
-    private static String createBill(String path) {
+    public static String createBill(String path) {
         
-        ArrayList<Bill> bill = new ArrayList<>();
+        StringBuilder bill = new StringBuilder();
         HashMap<String, Bill> usersAndBill = new HashMap<>();
         LinkedList<AccessLog> logList = new LinkedList<>();
         FileReader file;
@@ -91,7 +90,7 @@ public class App {
                 AccessLog endLog = new AccessLog();
                 logCopy.remove(log);
 
-                for ( AccessLog l : logList ) {
+                for ( AccessLog l : logCopy ) {
                     if ( l.end && l.user.equals(log.user) && l.time.isAfter(log.time) ) {
                         duration = Math.toIntExact(SECONDS.between(log.time, l.time));
                         endLog = l;
@@ -113,8 +112,6 @@ public class App {
             }
         }
 
-        System.out.print(logCopy.size());
-
         //end time log, only happens if start time was in previous log file.
         for ( AccessLog l : logCopy ) {
             if (!!l.end) {
@@ -129,7 +126,8 @@ public class App {
 
         //put together complete bill
         for ( Bill values : usersAndBill.values()) {
-            bill.add(values);
+            bill.append(values).append("\n");
+
         }
 
         return bill.toString();
