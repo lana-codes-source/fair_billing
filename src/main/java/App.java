@@ -91,7 +91,6 @@ public class App {
         if (logList.isEmpty()) {
             System.out.println("No complete log lines found.");
             return "";
-            return "";
         }
 
         if (logList.isEmpty()) {
