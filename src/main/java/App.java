@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Scanner;
+import java.util.StringJoiner;
+
 import main.resources.AccessLog;
 import main.resources.Bill;
 
@@ -17,32 +19,30 @@ public class App {
     private static final String username = "^[a-zA-Z0-9]+?$";
 
     public static void main(String[] args) throws Exception {
-        //add a scanner to capture inputs until "stop" is input
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter path to log file, enter stop when finished:");
 
         while (scanner.hasNext()) {
             String input = scanner.next();
             if (input.equalsIgnoreCase("stop")) {
-                scanner.close();
                 break;
             } else {
                 System.out.println(createBill(input));
             }
         }
+        scanner.close();
+
     }
 
-    //take the path to the log file
-    //ues command line to grab said path
-    //iterate over each line
-    //split the line of text per space
-    //check if string map contains "start" or "end"
-    //ignore if timestamp and user is not there (ignore if no time, user or start/end)
-    //create bill for each user
-    //if user exists update counts
+    /*
+    Creates a Bill based on the log file input
+    which contains the username, a count of sessions
+    and the total duration of the sessions.
+    Returns an empty string for invalid unputs.
+    */
     public static String createBill(String path) {
         
-        StringBuilder bill = new StringBuilder();
+        StringJoiner bill = new StringJoiner(System.lineSeparator(), "", "");
         HashMap<String, Bill> usersAndBill = new HashMap<>();
         LinkedList<AccessLog> logList = new LinkedList<>();
         FileReader file;
@@ -60,15 +60,16 @@ public class App {
 
             //process all lines of txt into a linked map of records
             while ((currentLine = br.readLine()) != null) {
-            Boolean containsStart = false, containsEnd = false;
+            Boolean containsStart = false, containsEnd = false, containsTime = false;
             String userName = "";
-            LocalTime time = LocalTime.MAX;
+            LocalTime time = LocalTime.MIN;
 
             if (currentLine.contains("Start") || currentLine.contains("End")) {
                 var strings = currentLine.split(" ");
                 for (String s : strings ) {
                 if (s.matches(timestamp)) {
                     time = LocalTime.parse(s);
+                    containsTime = true;
                 } else if (s.matches(username) && userName.isBlank()) {
                     userName = s;
                 } else if (s.equals("Start")) {
@@ -78,7 +79,7 @@ public class App {
                 } 
             }
             }
-            if (!userName.isEmpty() && time != LocalTime.MAX && (containsStart || containsEnd)) {
+            if (!userName.isEmpty() && containsTime && (containsStart || containsEnd)) {
                 logList.add(new AccessLog(containsStart, containsEnd, userName, time));
             }
         }
@@ -92,25 +93,23 @@ public class App {
             return "";
         }
 
-        LocalTime first = logList.getFirst().time;
-        LocalTime last = logList.getLast().time;
+        LocalTime first = logList.getFirst().getTime();
+        LocalTime last = logList.getLast().getTime();
         ListIterator<AccessLog> logIterator = logList.listIterator();
-        LinkedList<AccessLog> logCopy = new LinkedList<AccessLog>(logList);
+        LinkedList<AccessLog> logCopy = new LinkedList<>(logList);
 
         
-        //use logList to create Bill
-        //Iterates through starts only and cleans up any leftover ends afterwards
+        //Iterates through start logs only and cleans up any leftover ends afterwards
         while (logIterator.hasNext()) {
-            //duration is defaulted to -1 as it could never be set to that later in the code.
             AccessLog log = logIterator.next();
-            if (!!log.start) {
+            if (!!log.getStart()) {
                 int duration = -1;
                 AccessLog endLog = new AccessLog();
                 logCopy.remove(log);
 
                 for ( AccessLog l : logCopy ) {
-                    if ( l.end && l.user.equals(log.user) && l.time.isAfter(log.time) ) {
-                        duration = Math.toIntExact(SECONDS.between(log.time, l.time));
+                    if ( l.getEnd() && l.getUser().equals(log.getUser()) && l.getTime().isAfter(log.getTime()) ) {
+                        duration = Math.toIntExact(SECONDS.between(log.getTime(), l.getTime()));
                         endLog = l;
                         break;
                     }
@@ -118,34 +117,32 @@ public class App {
                 logCopy.remove(endLog);   
                 //if no matching end time is found use the last time
                 if (duration == -1) {
-                    duration = Math.toIntExact(SECONDS.between(log.time, last));
+                    duration = Math.toIntExact(SECONDS.between(log.getTime(), last));
                 }
 
-                //find and set first record
-            if (usersAndBill.get(log.user) == null ) {
-                usersAndBill.put(log.user, new Bill(log.user, duration));
+            if (usersAndBill.get(log.getUser()) == null ) {
+                usersAndBill.put(log.getUser(), new Bill(log.getUser(), duration));
             } else {
-                usersAndBill.put(log.user, usersAndBill.get(log.user).Add(duration));
+                usersAndBill.put(log.getUser(), usersAndBill.get(log.getUser()).Add(duration));
             }
             }
         }
 
         //end time log, only happens if start time was in previous log file.
         for ( AccessLog l : logCopy ) {
-            if (!!l.end) {
-                int duration = Math.toIntExact(SECONDS.between(first, l.time));
-                if (usersAndBill.get(l.user) == null ) {
-                    usersAndBill.put(l.user, new Bill(l.user, duration));
+            if (!!l.getEnd()) {
+                int duration = Math.toIntExact(SECONDS.between(first, l.getTime()));
+                if (usersAndBill.get(l.getUser()) == null ) {
+                    usersAndBill.put(l.getUser(), new Bill(l.getUser(), duration));
                 } else {
-                    usersAndBill.put(l.user, usersAndBill.get(l.user).Add(duration));
+                    usersAndBill.put(l.getUser(), usersAndBill.get(l.getUser()).Add(duration));
             }
             }
         }
 
         //put together complete bill
         for ( Bill values : usersAndBill.values()) {
-            bill.append(values).append("\n");
-
+            bill.add(values.toString());
         }
 
         return bill.toString();

@@ -1,4 +1,4 @@
-package main.test.java;
+package test.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -11,10 +11,10 @@ import main.resources.Bill;
 public class AppTest {
     @Test
     public void LogTest() {
-        String response = App.createBill("src\\main\\test\\resources\\Logs.txt");
+        String response = App.createBill("src\\test\\resources\\Logs.txt");
 
         //build correct response
-        String correctResponse = new Bill("ALICE99", 4, 240).toString() + "\n" + new Bill("CHARLIE", 3, 37).toString() + "\n";
+        String correctResponse = new Bill("ALICE99", 4, 240).toString() + System.lineSeparator() + new Bill("CHARLIE", 3, 37).toString();
 
         assertNotNull(response);
         assertEquals( "response was incorrect" , response, correctResponse);
@@ -22,10 +22,9 @@ public class AppTest {
 
     @Test
     public void ComplexTest() {
-        String response = App.createBill("src\\main\\test\\resources\\ComplexLog.txt");
+        String response = App.createBill("src\\test\\resources\\ComplexLog.txt");
 
         assertNotNull(response);
-        System.out.println(response);
     }
 
     @Test
@@ -39,7 +38,7 @@ public class AppTest {
     @Test
     public void EmptyFileTest() {
 
-        String response = App.createBill("src\\main\\test\\resources\\EmptyLog.txt");
+        String response = App.createBill("src\\test\\resources\\EmptyLog.txt");
         assertEquals("", response);
         
     }
