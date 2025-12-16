@@ -62,7 +62,7 @@ public class App {
             while ((currentLine = br.readLine()) != null) {
             Boolean containsStart = false, containsEnd = false, containsTime = false;
             String userName = "";
-            LocalTime time = LocalTime.MIN;
+            LocalTime time = LocalTime.MAX;
 
             if (currentLine.contains("Start") || currentLine.contains("End")) {
                 var strings = currentLine.split(" ");
@@ -85,6 +85,12 @@ public class App {
         }
         } catch (Exception e) {
             System.out.println("An error occured while processing the file. The error was: " + e);
+            return "";
+        }
+
+        if (logList.isEmpty()) {
+            System.out.println("No complete log lines found.");
+            return "";
             return "";
         }
 
