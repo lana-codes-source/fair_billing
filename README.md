@@ -9,3 +9,4 @@ Log lines should be in the format as follows
 ```
 
 and lines without a valid timestamp, username and either "Start" or "End" will be ignored.
+The relative path must be entered once prompted, and entering "stop" will end the program.
