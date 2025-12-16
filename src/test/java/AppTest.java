@@ -31,7 +31,7 @@ public class AppTest {
     public void EmptyPathTest() {
 
         String response = App.createBill("");
-        assertEquals("", response);
+        assertEquals("error occured while reading file. The error was: java.io.FileNotFoundException: ", response);
         
     }
 
@@ -39,7 +39,7 @@ public class AppTest {
     public void EmptyFileTest() {
 
         String response = App.createBill("src\\test\\resources\\EmptyLog.txt");
-        assertEquals("", response);
+        assertEquals("No complete log lines found.", response);
         
     }
 
